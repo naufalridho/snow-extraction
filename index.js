@@ -66,9 +66,8 @@ class SnowArchival {
             console.log(groupPath)
 
             for (const task of tasks) {
-                console.log(task.number)
                 try {
-                    const taskPath = this.getTaskPath(groupPath, task.number)
+                    const taskPath = this.getTaskPath(groupPath, task)
                     execSync(`mkdir -p ${taskPath}`);
                     await this.extractCsv(task, taskPath);
                     await this.extractAttachments(task, taskPath);
@@ -82,9 +81,6 @@ class SnowArchival {
     async extractCsv(task, taskPath) {
         const journals = await this.conn.query(`select * from sys_journal_field where element in ('work_notes', 'comments') and element_id = '${task.number}' order by sys_created_on;`);
         const commentsAndWorkNotes = journals.map(this.constructJournal).join('\n');
-
-        const workNotes = journals.filter(j => j.element === 'work_notes').map(this.constructJournal).join('\n');
-        const comments = journals.filter(j => j.element === 'comments').map(this.constructJournal).join('\n');
 
         const assignedTo = await this.getAssignedTo(task);
         const catItemName = await this.getCatItemName(task);
@@ -134,7 +130,7 @@ class SnowArchival {
         const values = Object.values(data).join(',');
         
         // Write CSV string to file
-        const filepath = `\"${taskPath}/${task.number}_${this.formatDateWithTime(task.sys_created_on)}.csv\"`
+        const filepath = `\"${taskPath}/${task.number}.csv\"`
         fs.writeFileSync('data.csv', `${header}\n${values}`);
         execSync(`mv data.csv ${filepath}`);
     }
@@ -223,8 +219,8 @@ class SnowArchival {
         fs.writeFileSync(filepath, buf);
     }
 
-    getTaskPath(groupPath, taskNumber) {
-        return `${groupPath}/${taskNumber}`
+    getTaskPath(groupPath, task) {
+        return `${groupPath}/${task.number}/${this.formatDateWithTime(task.sys_created_on)}`
     }
 
     getGroupPath(tasks) {
