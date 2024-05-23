@@ -63,7 +63,7 @@ class SnowArchival {
             startIdx += this.batchSize;
 
             const groupPath = this.getGroupPath(tasks);
-            console.log(groupPath)
+            console.log(groupPath, startIdx)
 
             for (const task of tasks) {
                 try {
