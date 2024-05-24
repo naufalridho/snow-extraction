@@ -53,8 +53,7 @@ class SnowArchival {
         let startIdx = 0;
 
         while (true) {
-            let tasks = await this.getTask('RITM0010023');
-            // let tasks = await this.getTasks(startIdx, this.batchSize);
+            let tasks = await this.getTasks(startIdx, this.batchSize);
             if (tasks.length === 0) break;
 
             if (startIdx === 0) {
