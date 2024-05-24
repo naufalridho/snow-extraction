@@ -71,7 +71,7 @@ class SnowArchival {
                     const taskPath = this.getTaskPath(groupPath, task)
                     execSync(`mkdir -p ${taskPath}`);
                     await this.extractCsv(task, taskPath);
-                    await this.extractAttachments(task, taskPath);
+                    // await this.extractAttachments(task, taskPath);
                 } catch (err) {
                     console.error(`sys_id: ${task.sys_id}, task_number: ${task.number}, err:`, err);
                 }
@@ -127,13 +127,15 @@ class SnowArchival {
             'Sys Watch List': task.a_str_24,
         }
 
-        const header = Object.keys(data).join(',');
-        const values = Object.values(data).join(',');
+        console.log(data)
+
+        // const header = Object.keys(data).join(',');
+        // const values = Object.values(data).join(',');
         
-        // Write CSV string to file
-        const filepath = `\"${taskPath}/${task.number}.csv\"`
-        fs.writeFileSync('data.csv', `${header}\n${values}`);
-        execSync(`mv data.csv ${filepath}`);
+        // // Write CSV string to file
+        // const filepath = `\"${taskPath}/${task.number}.csv\"`
+        // fs.writeFileSync('data.csv', `${header}\n${values}`);
+        // execSync(`mv data.csv ${filepath}`);
     }
 
     async getAssignedTo(task) {
