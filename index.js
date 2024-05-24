@@ -162,7 +162,7 @@ class SnowArchival {
     }
 
     async getTask(taskNumber) {
-        return this.conn.query(`select * from task where number = ${taskNumber};`);
+        return this.conn.query(`select * from task where number = '${taskNumber}';`);
     }
 
     async extractAttachments(task, taskPath) {
