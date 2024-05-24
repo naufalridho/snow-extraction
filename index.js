@@ -53,7 +53,8 @@ class SnowArchival {
         let startIdx = 0;
 
         while (true) {
-            let tasks = await this.getTasks(startIdx, this.batchSize);
+            let tasks = await this.getTask('');
+            // let tasks = await this.getTasks(startIdx, this.batchSize);
             if (tasks.length === 0) break;
 
             if (startIdx === 0) {
@@ -92,38 +93,38 @@ class SnowArchival {
 
         const data = {
             'Number': task.number,
-            'Cat Item': catItemName,
-            'Watch List': task.a_str_24,
-            'Stage': stage.name,
-            'Approval Attachment': '',
-            'State': task.state,
-            'U Approval Request': task.a_str_11,
-            'Approval Set': task.approval_set,
-            'Assigned To': assignedTo,
-            'Assignment Group': task.assignment_group,
-            'Short Description': task.short_description,
-            'Resolved By': assignedTo,
-            'Closed Time': task.u_closed_time,
-            'Resolution Note': task.a_str_10,
-            'Closed At': task.closed_at,
-            'Comments And Work Notes': commentsAndWorkNotes,
-            'Contact Person': task.a_str_28,
-            'Request': task.a_str_2, 
-            'Reopen Count': '', 
-            'Reference 1': reference,
-            'Sys Created By': task.sys_created_by,
-            'Reassignment Count': task.reassignment_count,
-            'Generic Mailbox': task.a_str_23,
-            'Cc': task.a_str_24, 
-            'To Address': task.a_str_25,
-            'Opened At': task.opened_at,
-            'External Users Email': task.a_str_7,
-            'Approval': task.approval,
-            'Contact Type': task.contact_type,
-            'Ritm Region': task.a_str_27,
-            'Ritm Source': task.a_str_22,
+            'Opened': task.opened_at,
+            'Company Code': task.company,
+            'Region': task.a_str_27,
             'Priority': task.priority,
-            'State': task.state
+            'Source': task.a_str_22,
+            'Item': catItemName,
+            'Short Description': task.short_description,
+            'Resolution Note': task.a_str_10,
+            'Resolved': task.u_closed_time,
+            'Closed': task.closed_at,
+            'Stage': stage.name,
+            'State': task.state,
+            'Assignment Group': task.assignment_group,
+            'PMI Generic Mailbox': task.a_str_23,
+            'Email TO Recepients': task.a_str_25,
+            'Email CC Recipients': task.a_str_24,
+            'External User\'s Email': task.a_str_7,
+            'Sys Email Address': task.sys_created_by,
+            'Contact Type': task.contact_type,
+            'Assigned To': assignedTo,
+            'Resolved By': assignedTo,
+            'Contact Person': task.a_str_28,
+            'Approval': task.approval,
+            'Approval Attachment': '',
+            'Approval Request': task.a_str_11,
+            'Approval Set': task.approval_set,
+            'Reassignment Count': task.reassignment_count,
+            'Related Ticket': reference,
+            'Reopening Count': '', 
+            'Comments And Work Notes': commentsAndWorkNotes,
+            'Request': task.a_str_2, 
+            'Sys Watch List': task.a_str_24,
         }
 
         const header = Object.keys(data).join(',');
@@ -155,10 +156,11 @@ class SnowArchival {
     }
 
     async getTasks(offset, limit) {
-        return this.conn.query(`
-          select * from task where sys_class_name = 'sc_req_item' order by number limit ${limit} offset ${offset};
-        `);
-        
+        return this.conn.query(`select * from task where sys_class_name = 'sc_req_item' order by number limit ${limit} offset ${offset};`);
+    }
+
+    async getTask(taskNumber) {
+        return this.conn.query(`select * from task where number = ${taskNumber};`);
     }
 
     async extractAttachments(task, taskPath) {
@@ -220,7 +222,7 @@ class SnowArchival {
     }
 
     getTaskPath(groupPath, task) {
-        return `${groupPath}/${task.number}/${this.formatDateWithTime(task.sys_created_on)}`
+        return `${groupPath}/${task.number}_${this.formatDateWithTime(task.sys_created_on)}`
     }
 
     getGroupPath(tasks) {
