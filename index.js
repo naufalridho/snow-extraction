@@ -94,6 +94,7 @@ class SnowArchival {
         const stage = await this.conn.query(`select name from wf_stage where sys_id = '${context.stage}'`);
 
         const closedAtDate = new Date(task.closed_at);
+        console.log(closedAtDate);
         const resolvedAt = this.formatDateBeta(closedAtDate.setDate(closedAtDate.getDate() - 7));
 
         const data = {
