@@ -155,7 +155,7 @@ class SnowArchival {
     }
 
     constructJournal(j) {
-        return '${j.sys_created_by}\n${j.sys_created_on}\n${j.value}';
+        return `${j.sys_created_by}\n${j.sys_created_on}\n${j.value}`;
     }
 
     async getTasks(offset, limit) {
