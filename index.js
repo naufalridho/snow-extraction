@@ -85,6 +85,9 @@ class SnowArchival {
         const commentsAndWorkNotes = journals.map(this.constructJournal).join('\n');
 
         const assignedTo = await this.getAssignedTo(task);
+
+        console.log(task.a_ref_1);
+
         const catItemName = await this.getCatItemName(task);
 
         const reference = await this.getReference(task);
