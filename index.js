@@ -53,7 +53,7 @@ class SnowArchival {
         let startIdx = 0;
 
         while (true) {
-            let tasks = await this.getTask('RITM0923189');
+            let tasks = await this.getTask('RITM0923342');
             if (tasks.length === 0) break;
 
             if (startIdx === 0) {
@@ -71,11 +71,11 @@ class SnowArchival {
                     execSync(`mkdir -p ${taskPath}`);
                     await this.extractCsv(task, taskPath);
                     // await this.extractAttachments(task, taskPath);
-                    break;
                 } catch (err) {
                     console.error(`sys_id: ${task.sys_id}, task_number: ${task.number}, err:`, err);
                 }
             }
+            break;
         }
     }
 
