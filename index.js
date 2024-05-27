@@ -86,14 +86,15 @@ class SnowArchival {
 
         const assignedTo = await this.getAssignedTo(task);
 
-        console.log(task.a_ref_1);
-
         const catItemName = await this.getCatItemName(task);
 
         const reference = await this.getReference(task);
 
         const context = await this.conn.query(`select name, stage from wf_context where sys_id = '${task.sys_id}'`);
-        const stage = await this.conn.query(`select name from wf_stage where sys_id = '${context.stage}'`)
+        const stage = await this.conn.query(`select name from wf_stage where sys_id = '${context.stage}'`);
+
+        const closedAtDate = new Date(task.closed_at);
+        const resolvedAt = this.formatDateBeta(closedAtDate.setDate(closedAtDate.getDate() - 7));
 
         const data = {
             'Number': task.number,
@@ -105,8 +106,8 @@ class SnowArchival {
             'Item': catItemName,
             'Short Description': task.short_description,
             'Resolution Note': task.a_str_10,
-            'Resolved': task.u_closed_time,
-            'Closed': task.closed_at,
+            'Resolved': resolvedAt,
+            'Closed': this.formatDateBeta((new Date(task.closed_at)).setDate()),
             'Stage': stage.name,
             'State': task.state,
             'Assignment Group': task.assignment_group,
@@ -149,8 +150,7 @@ class SnowArchival {
 
     async getCatItemName(task) {
         const cat = await this.conn.query(`select name from sc_cat_item where sys_id = '${task.a_ref_1}'`);
-        console.log(cat)
-        return cat.name;
+        return cat[0]?.name || '';
     }
 
     async getReference(task) {
@@ -237,6 +237,15 @@ class SnowArchival {
         const endTask = tasks[tasks.length - 1]
         return `${this.resultDir}/${startTask.number}-${endTask.number}_${this.formatDate(startTask.sys_created_on)}_${this.formatDate(endTask.sys_created_on)}`
     }
+
+    formatDateBeta(date) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+      }
 
    formatDate(date) {
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
