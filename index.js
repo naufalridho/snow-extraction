@@ -81,7 +81,7 @@ class SnowArchival {
     }
 
     async extractCsv(task, taskPath) {
-        const journals = await this.conn.query(`select * from sys_journal_field where element in ('work_notes', 'comments') and element_id = '${task.number}' order by sys_created_on;`);
+        const journals = await this.conn.query(`select * from sys_journal_field where element in ('work_notes', 'comments') and element_id = '${task.sys_id}' order by sys_created_on;`);
         const commentsAndWorkNotes = journals.map(this.constructJournal).join('\n');
 
         const assignedTo = await this.getAssignedTo(task);
