@@ -1,9 +1,6 @@
 const fs = require('fs');
 const mariadb = require('mariadb');
-const {
-    execSync,
-    exec
-} = require('child_process');
+const { execSync } = require('child_process');
 
 async function main() {
     console.log('Script started')
@@ -53,7 +50,7 @@ class SnowArchival {
         let startIdx = 0;
 
         while (true) {
-            let tasks = await this.getTask('RITM0923189');
+            let tasks = await this.getTasks(startIdx, this.batchSize);
             if (tasks.length === 0) break;
 
             if (startIdx === 0) {
@@ -70,13 +67,11 @@ class SnowArchival {
                     const taskPath = this.getTaskPath(groupPath, task)
                     execSync(`mkdir -p ${taskPath}`);
                     await this.extractCsv(task, taskPath);
-                    // await this.extractAttachments(task, taskPath);
-                    break
+                    await this.extractAttachments(task, taskPath);
                 } catch (err) {
                     console.error(`sys_id: ${task.sys_id}, task_number: ${task.number}, err:`, err);
                 }
             }
-            break;
         }
     }
 
@@ -90,12 +85,18 @@ class SnowArchival {
 
         const reference = await this.getReference(task);
 
-        const context = await this.conn.query(`select name, stage from wf_context where sys_id = '${task.sys_id}'`);
-        const stage = await this.conn.query(`select name from wf_stage where sys_id = '${context.stage}'`);
+        const contexts = await this.conn.query(`select name, stage from wf_context where id = '${task.sys_id}'`);
+
+        let stageName = '';
+        if (contexts && contexts.length > 0) {
+            const context = contexts[0]
+    
+            const stages = await this.conn.query(`select name from wf_stage where sys_id = '${context.stage}'`);
+            stageName = stages[0]?.name;
+        }
 
         const closedAtDate = new Date(task.closed_at);
-        console.log(closedAtDate);
-        const resolvedAt = this.formatDateBeta(closedAtDate.setDate(closedAtDate.getDate() - 7));
+        // const resolvedAt = this.formatDateBeta(closedAtDate.setDate(closedAtDate.getDate() - 7));
 
         const data = {
             'Number': task.number,
@@ -107,9 +108,9 @@ class SnowArchival {
             'Item': catItemName,
             'Short Description': task.short_description,
             'Resolution Note': task.a_str_10,
-            'Resolved': resolvedAt,
-            'Closed': this.formatDateBeta((new Date(task.closed_at)).setDate()),
-            'Stage': stage.name,
+            'Resolved': this.formatDateBeta(closedAtDate),
+            'Closed': this.formatDateBeta(closedAtDate),
+            'Stage': stageName,
             'State': task.state,
             'Assignment Group': task.assignment_group,
             'PMI Generic Mailbox': task.a_str_23,
@@ -133,20 +134,18 @@ class SnowArchival {
             'Sys Watch List': task.a_str_24,
         }
 
-        console.log(data)
+        const header = Object.keys(data).join(',');
+        const values = Object.values(data).join(',');
 
-        // const header = Object.keys(data).join(',');
-        // const values = Object.values(data).join(',');
-        
-        // // Write CSV string to file
-        // const filepath = `\"${taskPath}/${task.number}.csv\"`
-        // fs.writeFileSync('data.csv', `${header}\n${values}`);
-        // execSync(`mv data.csv ${filepath}`);
+        // Write CSV string to file
+        const filepath = `\"${taskPath}/${task.number}.csv\"`
+        fs.writeFileSync('data.csv', `${header}\n${values}`);
+        execSync(`mv data.csv ${filepath}`);
     }
 
     async getAssignedTo(task) {
         const user = await this.conn.query(`select name from sys_user where sys_id = '${task.a_ref_10}'`);
-        return user.name;
+        return user[0]?.name || '';
     }
 
     async getCatItemName(task) {
@@ -164,7 +163,7 @@ class SnowArchival {
     }
 
     async getTasks(offset, limit) {
-        return this.conn.query(`select * from task where sys_class_name = 'sc_req_item' order by number limit ${limit} offset ${offset};`);
+        return this.conn.query(`select * from task where sys_class_name = 'sc_req_item' order by number desc limit ${limit} offset ${offset};`);
     }
 
     async getTask(taskNumber) {
